@@ -1,35 +1,46 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+
+// Type definitions for grammar structures
+type Grammar = Record<string, string[][]>;
+type FirstSets = Record<string, Set<string>>;
+type FollowSets = Record<string, Set<string>>;
+type ParseTable = Record<string, Record<string, string[]>>;
+interface Entry { nt: string; t: string; prod: string; }
 
 function App() {
-  const [grammarText, setGrammarText] = useState(
+  const [grammarText, setGrammarText] = useState<string>(
 `E -> T E'
 E' -> + T E' | ε
 T -> F T'
 T' -> * F T' | ε
 F -> ( E ) | id`
   );
-  const [inputString, setInputString] = useState('id + id');
-  const [firstSets, setFirstSets] = useState({});
-  const [followSets, setFollowSets] = useState({});
-  const [parseTable, setParseTable] = useState({});
-  const [terminalsList, setTerminalsList] = useState([]);
-  const [steps, setSteps] = useState([]);
-  const [parseEntries, setParseEntries] = useState([]);
+  const [inputString, setInputString] = useState<string>('id + id');
+  const [firstSets, setFirstSets] = useState<FirstSets>({} as FirstSets);
+  const [followSets, setFollowSets] = useState<FollowSets>({} as FollowSets);
+  const [parseTable, setParseTable] = useState<ParseTable>({} as ParseTable);
+  const [terminalsList, setTerminalsList] = useState<string[]>([]);
+  const [steps, setSteps] = useState<[string, string, string][]>([]);
+  const [parseEntries, setParseEntries] = useState<Entry[]>([]);
 
   // Compute FIRST sets
-  const computeFirst = (grammar, nonterminals, terminals) => {
-    const FIRST = {};
-    nonterminals.forEach(A => (FIRST[A] = new Set()));
+  const computeFirst = (
+    grammar: Grammar,
+    nonterminals: string[],
+    terminals: Set<string>
+  ): FirstSets => {
+    const FIRST: FirstSets = {} as FirstSets;
+    nonterminals.forEach((A) => (FIRST[A] = new Set()));
     let changed = true;
 
-    const firstOfSeq = seq => {
-      const result = new Set();
-      for (let sym of seq) {
+    const firstOfSeq = (seq: string[]): Set<string> => {
+      const result = new Set<string>();
+      for (const sym of seq) {
         if (terminals.has(sym)) {
           result.add(sym);
           return result;
         }
-        for (let f of FIRST[sym]) if (f !== 'ε') result.add(f);
+        FIRST[sym].forEach((f) => { if (f !== 'ε') result.add(f); });
         if (!FIRST[sym].has('ε')) {
           return result;
         }
@@ -40,10 +51,10 @@ F -> ( E ) | id`
 
     while (changed) {
       changed = false;
-      for (let [A, prods] of Object.entries(grammar)) {
-        prods.forEach(rhs => {
+      for (const [A, prods] of Object.entries(grammar)) {
+        prods.forEach((rhs) => {
           const fs = firstOfSeq(rhs);
-          fs.forEach(sym => {
+          fs.forEach((sym) => {
             if (!FIRST[A].has(sym)) {
               FIRST[A].add(sym);
               changed = true;
@@ -55,35 +66,41 @@ F -> ( E ) | id`
     return FIRST;
   };
 
-  const computeFollow = (grammar, nonterminals, terminals, FIRST) => {
-    const FOLLOW = {};
-    nonterminals.forEach(A => (FOLLOW[A] = new Set()));
+  // Compute FOLLOW sets
+  const computeFollow = (
+    grammar: Grammar,
+    nonterminals: string[],
+    terminals: Set<string>,
+    FIRST: FirstSets
+  ): FollowSets => {
+    const FOLLOW: FollowSets = {} as FollowSets;
+    nonterminals.forEach((A) => (FOLLOW[A] = new Set()));
     FOLLOW[nonterminals[0]].add('$');
     let changed = true;
 
     while (changed) {
       changed = false;
-      for (let [A, prods] of Object.entries(grammar)) {
-        prods.forEach(rhs => {
-          let trailer = new Set(FOLLOW[A]);
+      for (const [A, prods] of Object.entries(grammar)) {
+        prods.forEach((rhs) => {
+          let trailer = new Set<string>(FOLLOW[A]);
           for (let i = rhs.length - 1; i >= 0; i--) {
             const sym = rhs[i];
             if (nonterminals.includes(sym)) {
-              trailer.forEach(t => {
+              trailer.forEach((t) => {
                 if (!FOLLOW[sym].has(t)) {
                   FOLLOW[sym].add(t);
                   changed = true;
                 }
               });
               if (FIRST[sym].has('ε')) {
-                FIRST[sym].forEach(f => {
+                FIRST[sym].forEach((f) => {
                   if (f !== 'ε') trailer.add(f);
                 });
               } else {
-                trailer = new Set(FIRST[sym]);
+                trailer = new Set<string>(FIRST[sym]);
               }
             } else {
-              trailer = new Set([sym]);
+              trailer = new Set<string>([sym]);
             }
           }
         });
@@ -92,22 +109,25 @@ F -> ( E ) | id`
     return FOLLOW;
   };
 
-
   // Build LL(1) parse table
-  const buildParseTable = (grammar, nonterminals, terminals, FIRST, FOLLOW) => {
-    const M = {};
-    nonterminals.forEach(A => (M[A] = {}));
-  
-    const firstOfSeq = seq => {
-      const res = new Set();
-      for (let sym of seq) {
+  const buildParseTable = (
+    grammar: Grammar,
+    nonterminals: string[],
+    terminals: Set<string>,
+    FIRST: FirstSets,
+    FOLLOW: FollowSets
+  ): ParseTable => {
+    const M: ParseTable = {} as ParseTable;
+    nonterminals.forEach((A) => (M[A] = {} as Record<string, string[]>));
+
+    const firstOfSeq = (seq: string[]): Set<string> => {
+      const res = new Set<string>();
+      for (const sym of seq) {
         if (terminals.has(sym)) {
           res.add(sym);
           return res;
         }
-        FIRST[sym].forEach(f => {
-          if (f !== 'ε') res.add(f);
-        });
+        FIRST[sym].forEach((f) => { if (f !== 'ε') res.add(f); });
         if (!FIRST[sym].has('ε')) {
           return res;
         }
@@ -115,57 +135,59 @@ F -> ( E ) | id`
       res.add('ε');
       return res;
     };
-  
-    for (let [A, prods] of Object.entries(grammar)) {
-      prods.forEach(rhs => {
+
+    for (const [A, prods] of Object.entries(grammar)) {
+      prods.forEach((rhs) => {
         const first_rhs = firstOfSeq(rhs);
-        first_rhs.forEach(a => {
+        first_rhs.forEach((a) => {
           if (a !== 'ε') M[A][a] = rhs;
         });
         if (first_rhs.has('ε')) {
-          FOLLOW[A].forEach(b => {
+          FOLLOW[A].forEach((b) => {
             M[A][b] = [];
           });
         }
       });
     }
-  
+
     return M;
-  };  
+  };
 
   const handleParse = () => {
-    // Parse grammar input
-    const grammar = {};
-    const nonterminals = [];
-    const terminals = new Set();
+    // Parse grammar text
+    const grammar: Grammar = {};
+    const nonterminals: string[] = [];
+    const terminals: Set<string> = new Set();
 
-    grammarText.trim().split('\n').forEach(line => {
-      const [lhs, rhsText] = line.split('->').map(s => s.trim());
+    grammarText.trim().split('\n').forEach((line) => {
+      const [lhs, rhsText] = line.split('->').map((s) => s.trim());
       nonterminals.push(lhs);
-      grammar[lhs] = rhsText.split('|').map(prod =>
-        prod
-          .trim()
-          .split(/\s+/)
-          .filter(sym => sym && sym !== 'ε')
+      grammar[lhs] = rhsText.split('|').map((prod) =>
+        prod.trim().split(/\s+/).filter((sym) => sym && sym !== 'ε')
       );
     });
+
     // Collect terminals
-    Object.values(grammar).flat().flat().forEach(sym => {
-      if (!nonterminals.includes(sym)) terminals.add(sym);
+    Object.values(grammar).forEach((productions) => {
+      productions.forEach((rhs) => {
+        rhs.forEach((sym) => {
+          if (!nonterminals.includes(sym)) {
+            terminals.add(sym);
+          }
+        });
+      });
     });
     terminals.add('$');
-
+    
     const FIRST = computeFirst(grammar, nonterminals, terminals);
     const FOLLOW = computeFollow(grammar, nonterminals, terminals, FIRST);
     const M = buildParseTable(grammar, nonterminals, terminals, FIRST, FOLLOW);
 
-    // Sorted terminals list
     const termList = [...terminals].sort((a, b) => (a === '$' ? 1 : b === '$' ? -1 : a.localeCompare(b)));
 
-    // Build parse table entries
-    const entries = [];
-    nonterminals.forEach(nt => {
-      termList.forEach(t => {
+    const entries: Entry[] = [];
+    nonterminals.forEach((nt) => {
+      termList.forEach((t) => {
         if (M[nt][t] !== undefined) {
           const prodStr = M[nt][t].length ? M[nt][t].join(' ') : 'ε';
           entries.push({ nt, t, prod: prodStr });
@@ -173,10 +195,9 @@ F -> ( E ) | id`
       });
     });
 
-    // Parsing steps
     const inputTokens = inputString.trim().split(/\s+/);
-    const stepsArr = [];
-    let stack = ['$', nonterminals[0]];
+    const stepsArr: [string, string, string][] = [];
+    const stack: string[] = ['$', nonterminals[0]];
     let idx = 0;
 
     while (true) {
@@ -192,19 +213,23 @@ F -> ( E ) | id`
       if (top === current) {
         stepsArr.push([stackStr, inputStr, `Match '${top}'`]);
         stack.pop();
-        idx++; continue;
+        idx++;
+        continue;
       }
       if (nonterminals.includes(top)) {
         const prod = M[top][current];
         if (prod) {
           stack.pop();
-          if (prod.length > 0) prod.slice().reverse().forEach(sym => stack.push(sym));
+          prod.slice().reverse().forEach((sym) => stack.push(sym));
           const prodStr = prod.length ? prod.join(' ') : 'ε';
-          stepsArr.push([stackStr, inputStr, `${top} → ${prodStr}`]); continue;
+          stepsArr.push([stackStr, inputStr, `${top} → ${prodStr}`]);
+          continue;
         }
-        stepsArr.push([stackStr, inputStr, 'ERROR: no rule']); break;
+        stepsArr.push([stackStr, inputStr, 'ERROR: no rule']);
+        break;
       }
-      stepsArr.push([stackStr, inputStr, 'ERROR: mismatch']); break;
+      stepsArr.push([stackStr, inputStr, 'ERROR: mismatch']);
+      break;
     }
 
     setFirstSets(FIRST);
