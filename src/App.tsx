@@ -70,7 +70,6 @@ F -> ( E ) | id`
   const computeFollow = (
     grammar: Grammar,
     nonterminals: string[],
-    terminals: Set<string>,
     FIRST: FirstSets
   ): FollowSets => {
     const FOLLOW: FollowSets = {} as FollowSets;
@@ -180,7 +179,7 @@ F -> ( E ) | id`
     terminals.add('$');
     
     const FIRST = computeFirst(grammar, nonterminals, terminals);
-    const FOLLOW = computeFollow(grammar, nonterminals, terminals, FIRST);
+    const FOLLOW = computeFollow(grammar, nonterminals, FIRST);
     const M = buildParseTable(grammar, nonterminals, terminals, FIRST, FOLLOW);
 
     const termList = [...terminals].sort((a, b) => (a === '$' ? 1 : b === '$' ? -1 : a.localeCompare(b)));
