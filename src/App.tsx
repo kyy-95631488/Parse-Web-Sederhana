@@ -22,6 +22,7 @@ F -> ( E ) | id`
   const [terminalsList, setTerminalsList] = useState<string[]>([]);
   const [steps, setSteps] = useState<[string, string, string][]>([]);
   const [parseEntries, setParseEntries] = useState<Entry[]>([]);
+  const [result, setResult] = useState<string>('');
 
   // Compute FIRST sets
   const computeFirst = (
@@ -159,31 +160,28 @@ F -> ( E ) | id`
     const terminals: Set<string> = new Set();
 
     grammarText.trim().split('\n').forEach((line) => {
+      if (!line.includes('->')) return;
       const [lhs, rhsText] = line.split('->').map((s) => s.trim());
       nonterminals.push(lhs);
       grammar[lhs] = rhsText.split('|').map((prod) =>
-        prod.trim().split(/\s+/).filter((sym) => sym && sym !== 'ε')
+        prod.trim().split(/\s+/).filter((sym) => sym).map(sym => sym === 'ε' ? 'ε' : sym)
       );
     });
 
-    // Collect terminals
     Object.values(grammar).forEach((productions) => {
       productions.forEach((rhs) => {
         rhs.forEach((sym) => {
-          if (!nonterminals.includes(sym)) {
-            terminals.add(sym);
-          }
+          if (!nonterminals.includes(sym)) terminals.add(sym);
         });
       });
     });
     terminals.add('$');
-    
+
     const FIRST = computeFirst(grammar, nonterminals, terminals);
     const FOLLOW = computeFollow(grammar, nonterminals, FIRST);
     const M = buildParseTable(grammar, nonterminals, terminals, FIRST, FOLLOW);
 
     const termList = [...terminals].sort((a, b) => (a === '$' ? 1 : b === '$' ? -1 : a.localeCompare(b)));
-
     const entries: Entry[] = [];
     nonterminals.forEach((nt) => {
       termList.forEach((t) => {
@@ -198,6 +196,7 @@ F -> ( E ) | id`
     const stepsArr: [string, string, string][] = [];
     const stack: string[] = ['$', nonterminals[0]];
     let idx = 0;
+    let accepted = false;
 
     while (true) {
       const top = stack[stack.length - 1];
@@ -207,6 +206,7 @@ F -> ( E ) | id`
 
       if (top === '$' && current === '$') {
         stepsArr.push([stackStr, inputStr, 'ACCEPT']);
+        accepted = true;
         break;
       }
       if (top === current) {
@@ -225,9 +225,11 @@ F -> ( E ) | id`
           continue;
         }
         stepsArr.push([stackStr, inputStr, 'ERROR: no rule']);
+        accepted = false;
         break;
       }
       stepsArr.push([stackStr, inputStr, 'ERROR: mismatch']);
+      accepted = false;
       break;
     }
 
@@ -237,6 +239,7 @@ F -> ( E ) | id`
     setTerminalsList(termList);
     setParseEntries(entries);
     setSteps(stepsArr);
+    setResult(accepted ? 'Diterima' : 'Ditolak');
   };
 
   return (
@@ -334,6 +337,7 @@ F -> ( E ) | id`
                     <td className="border p-2">{nt}</td><td className="border p-2">{t}</td><td className="border p-2">{`${nt}→${prod}`}</td>
                   </tr>
                 ))}
+                <p> Result: {result}</p>
               </tbody>
             </table>
           </div>
