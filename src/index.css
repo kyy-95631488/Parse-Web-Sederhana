@@ -1,0 +1,172 @@
+/* Base styles */
+:root {
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color-scheme: light dark;
+  --primary-color: #3b82f6;
+  --secondary-color: #e5e7eb;
+  --background-color: #f9fafb;
+  --text-color: #333;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+}
+button:hover {
+  background-color: #2563eb;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+input,
+textarea {
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+table th, table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+table th {
+  background-color: #f1f5f9;
+  font-weight: bold;
+}
+
+table tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+table td {
+  font-family: 'Courier New', monospace;
+}
+
+table td:first-child {
+  font-weight: bold;
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 0.625rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  body {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .container {
+    width: 100%;
+    padding: 1.5rem;
+  }
+
+  button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.25rem;
+  }
+
+  input,
+  textarea {
+    font-size: 1.1rem;
+    padding: 1rem;
+  }
+
+  table th,
+  table td {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+  }
+
+  .mb-4 {
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  button {
+    padding: 1.2rem;
+    font-size: 1.125rem;
+  }
+
+  input,
+  textarea {
+    font-size: 1.125rem;
+    padding: 1rem;
+  }
+
+  table th,
+  table td {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+  }
+
+  .mb-4 {
+    margin-bottom: 1rem;
+  }
+}
