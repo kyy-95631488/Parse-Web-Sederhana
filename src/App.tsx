@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { Home } from "./pages/Home";
-import LL1 from "./pages/ll1";
+import LL1 from "./pages/LL1";
 import BottomUpParser  from "./pages/Bottom-Up";
 import './costum.css';
 
